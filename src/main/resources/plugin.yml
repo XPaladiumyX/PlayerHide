@@ -1,0 +1,11 @@
+name: PlayerHide
+version: '1.1-SNAPSHOT'
+main: skyxnetwork.playerHide.PlayerHide
+api-version: '1.20'
+prefix: PlayerHide-Logger
+authors: [ XPaladiumyX ]
+description: Made with love and determination
+website: skyxnetwork.net
+commands:
+  playerhide:
+    description: Toggle player visibility
