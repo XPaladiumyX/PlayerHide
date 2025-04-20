@@ -79,7 +79,7 @@ public final class PlayerHide extends JavaPlugin implements Listener, CommandExe
                     player.hidePlayer(this, p);
                 }
             }
-            player.sendMessage("§cPlayer Visibility enabled.");
+            player.sendMessage("§cPlayer Visibility disabled.");
         }
 
         return true;
