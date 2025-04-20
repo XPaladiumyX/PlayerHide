@@ -4,10 +4,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashSet;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public final class PlayerHide extends JavaPlugin implements Listener, CommandExecutor {
 
     private final Set<UUID> hiddenPlayers = new HashSet<>();
+    private FileConfiguration config;
     private static final String ANSI_MAGENTA = "\u001B[35m";
     private static final String ANSI_LIGHT_GRAY = "\u001B[37m";
     private static final String ANSI_RESET = "\u001B[0m";
@@ -25,6 +28,8 @@ public final class PlayerHide extends JavaPlugin implements Listener, CommandExe
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+        config = getConfig();
         getCommand("playerhide").setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getLogger().info(ANSI_LIGHT_GRAY + "︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹");
@@ -38,10 +43,12 @@ public final class PlayerHide extends JavaPlugin implements Listener, CommandExe
         Bukkit.getLogger().info("   ");
         Bukkit.getLogger().info(ANSI_LIGHT_GREEN + "PlayerHidePlugin enabled!");
         Bukkit.getLogger().info(ANSI_LIGHT_GRAY + "︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺︺");
+        loadHiddenPlayers();
     }
 
     @Override
     public void onDisable() {
+        saveHiddenPlayers();
         hiddenPlayers.clear();
         Bukkit.getLogger().info(ANSI_LIGHT_GRAY + "︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹︹");
         Bukkit.getLogger().info(ANSI_MAGENTA + " _______  ___   _  __   __    __   __    __    _  _______  _______ " + ANSI_RESET);
@@ -66,10 +73,13 @@ public final class PlayerHide extends JavaPlugin implements Listener, CommandExe
         Player player = (Player) sender;
         UUID uuid = player.getUniqueId();
 
+
         if (hiddenPlayers.contains(uuid)) {
             hiddenPlayers.remove(uuid);
             for (Player p : Bukkit.getOnlinePlayers()) {
-                p.showPlayer(this, player);
+                if (!p.equals(player)) {
+                    player.showPlayer(this, p);
+                }
             }
             player.sendMessage("§aPlayer Visibility enabled.");
         } else {
@@ -81,6 +91,8 @@ public final class PlayerHide extends JavaPlugin implements Listener, CommandExe
             }
             player.sendMessage("§cPlayer Visibility disabled.");
         }
+
+        saveHiddenPlayers();
 
         return true;
     }
@@ -94,5 +106,32 @@ public final class PlayerHide extends JavaPlugin implements Listener, CommandExe
                 joiner.hidePlayer(this, hider);
             }
         }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player quitter = event.getPlayer();
+        UUID uuid = quitter.getUniqueId();
+        // Enregistrer si ce joueur était caché avant de quitter
+        if (hiddenPlayers.contains(uuid)) {
+            hiddenPlayers.remove(uuid);
+            saveHiddenPlayers();  // Sauvegarder l'état au moment de la déconnexion
+        }
+    }
+
+    private void loadHiddenPlayers() {
+        for (String uuidStr : config.getStringList("hiddenPlayers")) {
+            UUID uuid = UUID.fromString(uuidStr);
+            hiddenPlayers.add(uuid);
+        }
+    }
+
+    private void saveHiddenPlayers() {
+        Set<String> uuidStrings = new HashSet<>();
+        for (UUID uuid : hiddenPlayers) {
+            uuidStrings.add(uuid.toString());
+        }
+        config.set("hiddenPlayers", uuidStrings);
+        saveConfig();
     }
 }
