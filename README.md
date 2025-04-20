@@ -25,14 +25,3 @@ A lightweight and simple Minecraft plugin for Paper 1.20.1+ that lets players to
 | Command       | Description                          |
 |---------------|--------------------------------------|
 | `/playerhide` | Toggle visibility of other players   |
-
-## 📂 plugin.yml
-
-```yaml
-name: PlayerHide
-main: com.yann.playerhide.PlayerHidePlugin
-version: 1.0
-api-version: 1.20
-commands:
-  playerhide:
-    description: Toggle player visibility
